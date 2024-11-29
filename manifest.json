@@ -1,0 +1,28 @@
+{
+	"description": "QoL improvments to betting websites",
+	"manifest_version": 3,
+	"name": "Betify",
+	"version": "1.0",
+	"homepage_url": "https://github.com/mdn/webextensions-examples/tree/master/borderify",
+	"icons": {
+		"96": "betify-logo-96.svg"
+	},
+	"content_scripts": [
+		{
+			"matches": [
+				"*://*.betano.pt/*"
+			],
+			"css": [
+				"style.css"
+			],
+			"js": [
+				"betify.js"
+			]
+		}
+	],
+	"browser_specific_settings": {
+		"gecko": {
+			"id": "betify@test.com"
+		}
+	}
+}

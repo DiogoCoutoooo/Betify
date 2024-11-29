@@ -1,0 +1,50 @@
+/* Ajuste para o botão criado */
+.return-rate-betano-light {
+	height: 38px;
+	width: 64px;
+	padding: 5px 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	border-radius: 8px;
+	background-color: #f6f8f9;
+	border: 0.5px solid #e0e4ea;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	font-weight: bold;
+	outline: 2px solid transparent;
+	outline-offset: 2px;
+}
+
+.return-rate-betano-dark {
+	height: 38px;
+	width: 64px;
+	padding: 5px 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	border-radius: 8px;
+	background-color: #2d3745;
+	border: 0.5px solid #374456;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	font-weight: bold;
+}
+
+
+/* Efeito de hover */
+.return-rate-betano-light:hover {
+	background-color: #eceff1;
+	/* Cor de fundo ao passar o mouse */
+	border-color: #d1d7e0;
+	/* Cor da borda ao passar o mouse */
+}
+
+.return-rate-betano-dark:hover {
+	background-color: #374456;
+	/* Cor de fundo ao passar o mouse */
+	border-color: #48576f;
+	/* Cor da borda ao passar o mouse */
+}
