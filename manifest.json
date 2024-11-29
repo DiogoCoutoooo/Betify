@@ -10,7 +10,8 @@
 	"content_scripts": [
 		{
 			"matches": [
-				"*://*.betano.pt/*"
+				"*://*.betano.pt/*",
+				"*://*.betclic.pt/*"
 			],
 			"css": [
 				"style.css"
