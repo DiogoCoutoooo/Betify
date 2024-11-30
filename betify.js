@@ -1,52 +1,52 @@
 function calcularReturnRate3(odd1, odd2, odd3) {
-	// Calcular x diretamente
+	//  Calcular x diretamente
 	const x = (odd2 * odd3) / (odd1 * odd2 + odd1 * odd3 + odd2 * odd3);
 
-	// Calcular y com base em x e as odds
+	//  Calcular y com base em x e as odds
 	const y = (odd1 / odd2) * x;
 
-	// Calcular z com base em y e as odds
+	//  Calcular z com base em y e as odds
 	const z = (odd2 / odd3) * y;
 
 	return { x: x, y: y, z: z };
 }
 
 function calcularReturnRate2(odd1, odd2) {
-	// Calcular x
+	//  Calcular x
 	const x = odd2 / (odd1 + odd2);
 
-	// Calcular y
+	//  Calcular y
 	const y = odd1 / (odd1 + odd2);
 
 	return { x, y };
 }
 
 function getGradientOdds(value, minValue, maxValue) {
-	// Certifique-se de que o valor está entre os limites
+	//  Certifique-se de que o valor está entre os limites
 	const clampedValue = Math.max(minValue, Math.min(value, maxValue));
 
-	// Normaliza o valor para uma escala de 0 a 1
+	//  Normaliza o valor para uma escala de 0 a 1
 	const normalizedValue = (clampedValue - minValue) / (maxValue - minValue);
 
-	// Interpolar entre vermelho (0) e verde (1)
-	const red = Math.round(200 * (1 - normalizedValue)); // Quanto maior o valor, menos vermelho
-	const green = Math.round(200 * normalizedValue); // Quanto maior o valor, mais verde
+	//  Interpolar entre vermelho (0) e verde (1)
+	const red = Math.round(200 * (1 - normalizedValue)); //  Quanto maior o valor, menos vermelho
+	const green = Math.round(200 * normalizedValue); //  Quanto maior o valor, mais verde
 
-	return `rgb(${red}, ${green}, 0)`; // Retorna uma cor no formato RGB
+	return `rgb(${red}, ${green}, 0)`; //  Retorna uma cor no formato RGB
 }
 
 function getGradientSuperOdds(value, minValue, maxValue) {
-	// Certifique-se de que o valor está entre os limites
+	//  Certifique-se de que o valor está entre os limites
 	const clampedValue = Math.max(minValue, Math.min(value, maxValue));
 
-	// Normaliza o valor para uma escala de 0 a 1
+	//  Normaliza o valor para uma escala de 0 a 1
 	const normalizedValue = (clampedValue - minValue) / (maxValue - minValue);
 
-	// Interpolar entre vermelho (0) e verde (1)
-	const green = Math.round(200 * (1 - normalizedValue)); // Quanto maior o valor, menos vermelho
-	const blue = Math.round(200 * normalizedValue); // Quanto maior o valor, mais verde
+	//  Interpolar entre vermelho (0) e verde (1)
+	const green = Math.round(200 * (1 - normalizedValue)); //  Quanto maior o valor, menos vermelho
+	const blue = Math.round(200 * normalizedValue); //  Quanto maior o valor, mais verde
 
-	return `rgb(0, ${green}, ${blue})`; // Retorna uma cor no formato RGB
+	return `rgb(0, ${green}, ${blue})`; //  Retorna uma cor no formato RGB
 }
 
 let observerTimeout;
@@ -55,14 +55,15 @@ const maxOdds = 94.0;
 const maxSuperOdds = 95.0;
 
 // Função genérica para remover uma div, se necessário
-function removeDivIfExists(existingDiv) {
-	if (existingDiv.classList.contains('extension-container') || existingDiv.classList.contains('return-rate')) {
-		existingDiv.remove();
+function removeDivIfExists(returnRateElement) {
+	if (returnRateElement?.classList.contains('extension-container') || returnRateElement?.classList.contains('return-rate')) {
+		returnRateElement.remove();
 	}
 }
 
-// Verifica os odds e calcula o retorno
-function processOdds(casino, oddsChildren, existingDiv) {
+//  Verifica os odds e calcula o retorno
+// TODO: melhorar função
+function processOdds(casino, oddsChildren, returnRateElement) {
 	let a, b, c, solution;
 	switch (casino) {
 		case "Betano":
@@ -76,18 +77,18 @@ function processOdds(casino, oddsChildren, existingDiv) {
 			}
 			if (oddsChildren.length === 3) {
 				if (isNaN(a) || isNaN(b) || isNaN(c)) {
-					//	removeDivIfExists(existingDiv);
+					removeDivIfExists(returnRateElement);
 					return null;
 				}
 				solution = calcularReturnRate3(a, b, c);
 			} else if (oddsChildren.length === 2) {
 				if (isNaN(a) || isNaN(b)) {
-					//	removeDivIfExists(existingDiv);
+					removeDivIfExists(returnRateElement);
 					return null;
 				}
 				solution = calcularReturnRate2(a, b);
 			} else {
-				removeDivIfExists(existingDiv);
+				removeDivIfExists(returnRateElement);
 				return null;
 			}
 
@@ -98,18 +99,18 @@ function processOdds(casino, oddsChildren, existingDiv) {
 			c = parseFloat(oddsChildren[2]?.children[1]?.textContent.trim().replace(',', '.'));
 			if (oddsChildren.length === 3) {
 				if (isNaN(a) || isNaN(b) || isNaN(c)) {
-					removeDivIfExists(existingDiv);
+					removeDivIfExists(returnRateElement);
 					return null;
 				}
 				solution = calcularReturnRate3(a, b, c);
 			} else if (oddsChildren.length === 2) {
 				if (isNaN(a) || isNaN(b)) {
-					removeDivIfExists(existingDiv);
+					removeDivIfExists(returnRateElement);
 					return null;
 				}
 				solution = calcularReturnRate2(a, b);
 			} else {
-				removeDivIfExists(existingDiv);
+				removeDivIfExists(returnRateElement);
 				return null;
 			}
 			break
@@ -159,10 +160,21 @@ function createProgressBar(returnRate, existingDiv, height) {
 	progressBarSteps.insertAdjacentElement('beforeend', progressBarStep)
 }
 
-function createBetanoEvents(input, odd1rr, odd2rr, odd3rr, existingDiv, testBool, solution) {
-	existingDiv.addEventListener('click', function () {
-		if (existingDiv.parentElement.children.length < 2) {
-			if (testBool == undefined) {
+function createBetanoEvents(casino, oddsDiv, returnRateElement, isDarkTheme, odd1rr, odd2rr, odd3rr) {
+	let input = document.createElement('input');
+
+	returnRateElement.addEventListener('click', function () {
+		let solution;
+		if (returnRateElement.parentElement.children.length < 2) {
+			const oddsChildren = oddsDiv.children;
+			const oddsData = processOdds(casino, oddsChildren, returnRateElement);
+			if (!oddsData) return;
+
+			const { odds: extractedOdds, solution: extractedSolution } = oddsData;
+			solution = extractedSolution;
+			let odds = extractedOdds;
+
+			if (isDarkTheme == undefined) {
 				buttonClassName = 'betano-light';
 				inputColor = "#f6f8f9"
 			} else {
@@ -170,28 +182,33 @@ function createBetanoEvents(input, odd1rr, odd2rr, odd3rr, existingDiv, testBool
 				inputColor = "#2d3745"
 			}
 
-			input.type = 'number'; // Define o tipo do input como texto
-			input.placeholder = 'Valor Freebets'; // Define um placeholder
-			input.style.color = existingDiv.style.color
+			input.className = "input"
+			input.type = 'number'; //  Define o tipo do input como texto
+			input.placeholder = 'Valor Freebets'; //  Define um placeholder
+			input.value = "";
+			input.style.color = returnRateElement.style.color
 			input.style.backgroundColor = inputColor
-			input.style.borderColor = existingDiv.style.color;
-			input.style.boxShadow = existingDiv.style.color;
-			existingDiv.parentElement.insertAdjacentElement('beforeend', input);
+			input.style.borderColor = returnRateElement.style.color;
+			input.style.boxShadow = returnRateElement.style.color;
+			returnRateElement.parentElement.insertAdjacentElement('beforeend', input);
 
 			odd1rr = document.createElement('div');
 			odd1rr.className = buttonClassName
+			odd1rr.id = `${odds.odd1}`
 			odd1rr.textContent = `${Math.round((solution.x).toFixed(2) * 10000) / 10000}€`
-			existingDiv.parentElement.insertAdjacentElement('beforeend', odd1rr);
+			returnRateElement.parentElement.insertAdjacentElement('beforeend', odd1rr);
 
 			odd2rr = document.createElement('div');
 			odd2rr.className = buttonClassName
+			odd2rr.id = `${odds.odd2}`
 			odd2rr.textContent = `${Math.round((solution.y).toFixed(2) * 10000) / 10000}€`
-			existingDiv.parentElement.insertAdjacentElement('beforeend', odd2rr);
+			returnRateElement.parentElement.insertAdjacentElement('beforeend', odd2rr);
 
 			odd3rr = document.createElement('div');
 			odd3rr.className = buttonClassName
+			odd3rr.id = `${odds.odd3}`
 			odd3rr.textContent = `${Math.round((solution.z).toFixed(2) * 10000) / 10000}€`
-			existingDiv.parentElement.insertAdjacentElement('beforeend', odd3rr);
+			returnRateElement.parentElement.insertAdjacentElement('beforeend', odd3rr);
 		}
 	});
 
@@ -205,58 +222,80 @@ function createBetanoEvents(input, odd1rr, odd2rr, odd3rr, existingDiv, testBool
 	})
 }
 
-// Atualiza ou cria uma div
-function updateOrCreateDiv(casino, itemView, participantsDiv, existingDiv, returnRate, uniqueId, solution) {
-	let newText, valueColor;
+// Função que elimina o Freebet Divider
+function deleteBetanoEvents(existingDiv) {
+	existingDiv.children[1].remove()
+	existingDiv.children[1].remove()
+	existingDiv.children[1].remove()
+	existingDiv.children[1]?.remove() // Pode não existir
+}
+
+// Função que atualiza ou cria o container/div para mostrar o returnRate
+// TODO: tentar fazer com que a função seja mais pequena
+// TODO: ver se é possível fazer o botão usando o css já existente na Betano (como se fez na Betclic)
+function updateOrCreateDiv(casino, view, participantsElement, oddsDiv, returnRateElement, returnRate, uniqueId) {
+	const divText = `${returnRate}%` // Texto com o returnRate, para meter na div do mesmo
 	switch (casino) {
 		case "Betano":
-			let testBool = itemView.querySelector('a[data-qa="live-event"]');
-			if (!existingDiv || (!existingDiv.classList.contains('extension-container'))) {
-				extensionContainer = document.createElement('div');
-				extensionContainer.className = "extension-container"
-				extensionContainer.id = "container " + uniqueId;
-				participantsDiv.insertAdjacentElement('afterend', extensionContainer);
-
-				existingDiv = document.createElement('div');
-				if (testBool == undefined) existingDiv.className = 'return-rate betano-light';
-				else existingDiv.className = 'return-rate betano-dark';
-				existingDiv.id = uniqueId;
-				valueColor = returnRate < maxOdds
-					? getGradientOdds(returnRate, minOdds, maxOdds)
-					: getGradientSuperOdds(returnRate, maxOdds - 0.5, maxSuperOdds - 0.5);
-
-				existingDiv.textContent = `${returnRate}%`;
-				existingDiv.style.color = valueColor;
-				extensionContainer.insertAdjacentElement('afterbegin', existingDiv);
-
-				let input, odd1rr, odd2rr, odd3rr;
-				input = document.createElement('input');
-				createBetanoEvents(input, odd1rr, odd2rr, odd3rr, existingDiv, testBool, solution)
-			}
-
+			// Cor da divText, inputElement, odd1rrElement, odd2rrElement, odd3rrElement
+			let valueColor, input, odd1rr, odd2rr, odd3rr;
+			// Obtenção da cor através de um gradiente
 			valueColor = returnRate < maxOdds
 				? getGradientOdds(returnRate, minOdds, maxOdds)
 				: getGradientSuperOdds(returnRate, maxOdds - 0.5, maxSuperOdds - 0.5);
 
-			if (!existingDiv.classList.contains("extension-container")) {
-				if (existingDiv.textContent !== newText) existingDiv.textContent = `${returnRate}%`;
-				if (existingDiv.style.color !== valueColor) existingDiv.style.color = valueColor;
+			// Verifica se o returnRateElement já foi criado e existe (extensionContainer)
+			if (!returnRateElement || (!returnRateElement.classList.contains('extension-container'))) {
+
+				// Criação do container
+				extensionContainer = document.createElement('div');
+				extensionContainer.className = "extension-container" // ver css
+				extensionContainer.id = `container ${participantsElement.children[0].textContent.trim()}`; // id único para cada container
+				participantsElement.insertAdjacentElement('afterend', extensionContainer); // Inserção depois do container do parentDiv (parentElement)
+
+				let isDarkTheme = view.querySelector('a[data-qa="live-event"]'); // booleano que verifica se o tema à volta é escuro ou não
+
+				returnRateElement = document.createElement('div');
+				// ver css
+				returnRateElement.className = isDarkTheme == undefined
+					? 'return-rate betano-light'
+					: 'return-rate betano-dark'
+				returnRateElement.id = uniqueId; // Coloca o uniqueId na returnRateDiv
+				returnRateElement.textContent = divText; // Mete o returnRate como texto da div
+				returnRateElement.style.color = valueColor; // Muda a cor da div para o gradiente
+				extensionContainer.insertAdjacentElement('afterbegin', returnRateElement); // Inserção no fim (dentro) do extensionContainer
+
+				createBetanoEvents(casino, oddsDiv, returnRateElement, isDarkTheme, odd1rr, odd2rr, odd3rr) // Função que trata da criação do Freebet Divider
+			}
+
+			// Verifica se o returnRateElement já foi criado e existe (extensionContainer)
+			if (returnRateElement.classList.contains("extension-container")) {
+				if (returnRateElement.children[0].textContent !== divText) {
+					returnRateElement.children[0].textContent = divText; // Caso o returRate mude, muda o texto
+					returnRateElement.children[0].style.color = valueColor; // Caso o returRate mude, muda a cor
+				}
+				if (returnRateElement.children[1]?.classList.contains("input")) {
+					if (returnRateElement.children[0].id != uniqueId) {
+						deleteBetanoEvents(returnRateElement) // Função que elimina (esconde) o FreebetDivider
+					}
+				}
+				returnRateElement.children[0].id = uniqueId // Atualiza o uniqueId da returnRateDiv, quando muda as odds/jogo
 			}
 			break;
 		case "Betclic":
-			if (!existingDiv || (!existingDiv.classList.contains('return-rate'))) {
-				existingDiv = document.createElement('div');
-				existingDiv.className = 'return-rate btn is-odd is-large has-trends ng-star-inserted'
-				existingDiv.id = uniqueId;
-				participantsDiv.insertAdjacentElement('afterend', existingDiv);
+			if (!returnRateElement || (!returnRateElement.classList.contains('return-rate'))) {
+				returnRateElement = document.createElement('div');
+				returnRateElement.className = 'return-rate btn is-odd is-large has-trends ng-star-inserted'
+				returnRateElement.id = uniqueId;
+				participantsElement.insertAdjacentElement('afterend', returnRateElement);
 
 				textSpan = document.createElement('span');
 				textSpan.className = 'label ng-star-inserted'
-				textSpan.textContent = `${returnRate}%`
-				existingDiv.insertAdjacentElement('beforeend', textSpan)
+				textSpan.textContent = divText
+				returnRateElement.insertAdjacentElement('beforeend', textSpan)
 
-				createProgressBar(returnRate, existingDiv, 7)
-				createProgressBar(returnRate, existingDiv, 9)
+				createProgressBar(returnRate, returnRateElement, 7)
+				createProgressBar(returnRate, returnRateElement, 9)
 			}
 			break;
 		default:
@@ -265,118 +304,134 @@ function updateOrCreateDiv(casino, itemView, participantsDiv, existingDiv, retur
 }
 
 // Lida com odds e manipula a criação/atualização da div
-function handleOdds(casino, itemView, participantsDiv, oddsDiv, existingDiv) {
-	let returnRate, uniqueId, solution;
-	if (casino == "Betano") {
-		const oddsChildren = oddsDiv.children;
-		const oddsData = processOdds(casino, oddsChildren, existingDiv);
-		if (!oddsData) return;
+// Chama a função updateOrCreateDiv, adicionando aos argumentos o returnRate e o uniqueId
+function handleOdds(casino, view, participantsElement, oddsDiv, returnRateElement) {
+	const oddsChildren = oddsDiv.children; // As divs do oddsDiv, ou seja, cada div com uma odd
+	const oddsData = processOdds(casino, oddsChildren, returnRateElement); // Função que dada uma oddsDiv, a processa e devolve o valor da odd dentro dela
+	if (!oddsData) return;
+	const { odds: extractedOdds, solution: extractedSolution } = oddsData; // extractedOdds: as odds do jogo; extractedSolution: a divisão das freebets do jogo
+	const returnRate = Math.round((extractedSolution.x * extractedOdds.odd1).toFixed(4) * 10000) / 100; // Return rate do jogo
 
-		const { odds, solution: extractedSolution } = oddsData;
-		solution = extractedSolution;
-		returnRate = Math.round((extractedSolution.x * odds.odd1).toFixed(4) * 10000) / 100;
-		uniqueId = `custom-return-rate-${participantsDiv.children[0].textContent.trim().replace(/\s+/g, '-')}`;
-	} else if (casino == "Betclic") {
-		const oddsChildren = oddsDiv.children;
-		const oddsData = processOdds(casino, oddsChildren, existingDiv);
-		if (!oddsData) return;
-
-		const { odds, solution: extractedSolution } = oddsData;
-		solution = extractedSolution;
-		returnRate = Math.round((extractedSolution.x * odds.odd1).toFixed(4) * 10000) / 100;
-		uniqueId = `custom-return-rate-${participantsDiv.children[1].children[0].textContent.trim().replace(/\s+/g, '-')}`;
+	switch (casino) {
+		case "Betano":
+			// Um uniqueId, que identifica unicamente cada jogo (usado mais tarde para ver alterações nas odds)
+			// custom-return-rate-${nome das equipas}-${odd1}-${odd2}-${odd3}
+			uniqueId = `custom-return-rate-${participantsElement.children[0].textContent}-${oddsChildren[0].textContent}-${oddsChildren[1].textContent}-${oddsChildren[2]?.textContent}`;
+			break;
+		case "Betclic":
+			// Um uniqueId, que identifica unicamente cada jogo (não vê alterações nas odds)
+			// custom-return-rate-${nome das equipas}
+			uniqueId = `custom-return-rate-${participantsElement.children[1].children[0].textContent}`;
+			break;
+		default:
+			break;
 	}
 
-	updateOrCreateDiv(casino, itemView, participantsDiv, existingDiv, returnRate, uniqueId, solution);
+	updateOrCreateDiv(casino, view, participantsElement, oddsDiv, returnRateElement, returnRate, uniqueId);
 }
 
-// Reseta a extensão para um item específico
-function handleSelector(casino, itemView) {
-	let participantsDiv, oddsDiv
-	if (casino == "Betano") {
-		participantsDiv = itemView.querySelector('div[data-qa="participants"]');
-		if (!participantsDiv) return;
+// Função que trata de selecionar as divs das odds e dos participantes no evento, 
+// e chama a função que trata de calcular os return rates
+// Passa como argumento o site a ser observado, a view, a participantsDiv/participantsParentDiv, a oddsDiv e a returnRateDiv/returnRateContainer
+function handleSelector(casino, view) {
+	let participantsDiv, oddsDiv; // Divs dos participantes e das odds, respetivamente
+	switch (casino) {
+		case "Betano":
+			participantsDiv = view.querySelector('div[data-qa="participants"]');
+			if (!participantsDiv) return;
 
-		oddsDiv = itemView.querySelector('div[class*="tw-w-[30%]"][class*="tw-min-w-[160px]"]');
-		if (!oddsDiv) oddsDiv = itemView.querySelector('div.tw-w-full.tw-flex.tw-flex-row.tw-flex-1.tw-items-center.tw-justify-center');
-		if (!oddsDiv) oddsDiv = itemView.querySelector('div[class*="tw-max-w-[50%]"][class*="tw-min-w-[256px]"]').children[0];
-		if (!oddsDiv) return;
-	} else if (casino == "Betclic") {
-		participantsDiv = itemView.querySelector('.event');
-		if (!participantsDiv) return;
+			oddsDiv = view.querySelector('div[class*="tw-w-[30%]"][class*="tw-min-w-[160px]"]');
+			if (!oddsDiv) oddsDiv = view.querySelector('div.tw-w-full.tw-flex.tw-flex-row.tw-flex-1.tw-items-center.tw-justify-center');
+			if (!oddsDiv) oddsDiv = view.querySelector('div[class*="tw-max-w-[50%]"][class*="tw-min-w-[256px]"]').children[0];
+			if (!oddsDiv) return;
 
-		oddsDiv = itemView.querySelector('.market').children[1];
-		if (oddsDiv != undefined) oddsDiv = oddsDiv.children[0]
-		if (!oddsDiv) return;
-		participantsDiv = participantsDiv.children[0]
+			let participantsParentDiv = participantsDiv.parentElement // Acedemos ao parent da participantsDiv para criar um container à frente deste, em vez de dentro
+			let returnRateContainer = participantsParentDiv.nextElementSibling; // Variável que vai verificar se é mesmo um returnRateContainer ou não
+
+			handleOdds(casino, view, participantsParentDiv, oddsDiv, returnRateContainer);
+			break;
+		case "Betclic":
+			participantsDiv = view.querySelector('.event');
+			if (!participantsDiv) return;
+
+			oddsDiv = view.querySelector('.market').children[1];
+			if (oddsDiv != undefined) oddsDiv = oddsDiv.children[0]
+			if (!oddsDiv) return;
+
+			// Aqui não criamos container (não é preciso)
+			let returnRateDiv = participantsDiv.nextElementSibling; // Variável que vai verificar se é mesmo uma returnRateDiv ou não
+
+			handleOdds(casino, view, participantsDiv, oddsDiv, returnRateDiv);
+			break
+		default:
+			break;
 	}
-
-	participantsDiv = participantsDiv.parentElement
-	let existingDiv = participantsDiv.nextElementSibling;
-
-	handleOdds(casino, itemView, participantsDiv, oddsDiv, existingDiv);
 }
 
+// Função que itera, para cada view (seja ela do vue ou normal), os jogos dentro da mesma
+// Passa como argumento o site a ser observado e as respetivas views
 function handleRecycleChanges() {
-	const domain = window.location.hostname;
+	const domain = window.location.hostname; // link do site
 	switch (domain) {
 		case "www.betano.pt":
-			//Betano
+			// Betano
+			// Apostas no recycle-scroller do vue
 			const itemBetanoWrappers = document.querySelectorAll('.vue-recycle-scroller__item-wrapper');
 			itemBetanoWrappers.forEach(itemWrapper => {
 				const itemViews = itemWrapper.querySelectorAll('.vue-recycle-scroller__item-view');
 				itemViews.forEach(itemView => {
-					handleSelector("Betano", itemView); // Atualiza as extensões de cada item
+					handleSelector("Betano", itemView);
 				});
 			});
+			// Apostas ao vivo/pré-jogo
 			const normalBetanoWrappers = document.querySelectorAll('.events-list__wrapper');
 			normalBetanoWrappers.forEach(normalWrapper => {
 				const normalViews = normalWrapper.querySelectorAll('div[data-evtid]');
 				normalViews.forEach(normalView => {
-					handleSelector("Betano", normalView); // Atualiza as extensões de cada item
+					handleSelector("Betano", normalView);
 				});
 			});
 			break;
 		case "www.betclic.pt":
-			//Betclic
+			// Betclic
+			// Apostas ao vivo
 			const normalBetclicWrappers = document.querySelectorAll('.groupEvents_content');
 			normalBetclicWrappers.forEach(normalWrapper => {
 				const normalViews = normalWrapper.querySelectorAll('.cardEvent_content');
 				normalViews.forEach(normalView => {
-					handleSelector("Betclic", normalView); // Atualiza as extensões de cada item
+					handleSelector("Betclic", normalView);
 				});
 			});
+			// Apostas pré-jogo
 			const normalBetclicWrappers2 = document.querySelectorAll('.verticalScroller_list');
 			normalBetclicWrappers2.forEach(normalWrapper => {
 				const normalViews = normalWrapper.querySelectorAll('.cardEvent_content');
 				normalViews.forEach(normalView => {
-					handleSelector("Betclic", normalView); // Atualiza as extensões de cada item
+					handleSelector("Betclic", normalView);
 				});
 			});
 		default:
 			break;
 	}
-
-
-
 }
 
+// Observador que, quando há uma alteração no HTML da página, dispara a função handleRecycleChanges()
 function observerCreate() {
 	const observer = new MutationObserver(() => {
-		// Verifica alterações no DOM sem recriar elementos desnecessariamente
+		//  Verifica alterações no DOM sem recriar elementos desnecessariamente
 		handleRecycleChanges(); // Atualiza extensões para itens reciclados
 	});
 
 	observer.observe(document.body, { childList: true, subtree: true });
 }
 
+// Função que inicia a extensão
 function initializeExtension() {
-
 	const waitLoad = setInterval(() => {
 		clearInterval(waitLoad); // Para o intervalo ao encontrar os elementos
 		handleRecycleChanges();    // Aplica a lógica inicialmente
 		observerCreate();  // Observa mudanças no DOM reciclável
-	}, 500);
+	}, 50);
 }
 
 // Inicia a extensão
