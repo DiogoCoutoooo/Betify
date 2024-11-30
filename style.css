@@ -1,8 +1,41 @@
+.extension-container {
+	display: flex;
+}
+
+input {
+	font-weight: bold;
+	margin-left: 6px;
+	border: 1px solid #ccc;
+	/* Ajuste para combinar com a borda dos botões */
+	border-radius: 10px;
+	/* Torna a borda arredondada */
+	padding: 5px 10px;
+	/* Ajusta o espaçamento interno */
+	font-size: 1rem;
+	/* Tamanho do texto */
+	text-align: center;
+	/* Centraliza o texto */
+	color: #317300;
+	/* Cor do texto, baseada no verde do botão */
+	transition: all 0.3s ease-in-out;
+	/* Animações suaves em interações */
+}
+
+input:focus {
+	outline: none;
+	/* Remove o contorno azul padrão */
+	border-color: #317300;
+	/* Destaca a borda no foco */
+	box-shadow: 0px 0px 5px rgba(49, 115, 0, 0.5);
+	/* Sombra mais evidente */
+}
+
 /* Ajuste para o botão criado */
 .betano-light {
 	height: 38px;
 	width: 64px;
 	padding: 5px 8px;
+	margin-left: 6px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -21,6 +54,7 @@
 	height: 38px;
 	width: 64px;
 	padding: 5px 8px;
+	margin-left: 6px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -31,6 +65,7 @@
 	cursor: pointer;
 	transition: all 0.2s ease;
 	font-weight: bold;
+	color: #fff;
 }
 
 /* Efeito de hover */

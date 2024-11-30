@@ -1,72 +1,24 @@
-function calcularReturnRate3(a, b, c) {
-	const A = [[1, 1, 1], [a, -b, 0], [0, b, -c]];
-	const B = [1, 0, 0];
+function calcularReturnRate3(odd1, odd2, odd3) {
+	// Calcular x diretamente
+	const x = (odd2 * odd3) / (odd1 * odd2 + odd1 * odd3 + odd2 * odd3);
 
-	function determinant3x3(matrix) {
-		return (
-			matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1]) -
-			matrix[0][1] * (matrix[1][0] * matrix[2][2] - matrix[1][2] * matrix[2][0]) +
-			matrix[0][2] * (matrix[1][0] * matrix[2][1] - matrix[1][1] * matrix[2][0])
-		);
-	}
+	// Calcular y com base em x e as odds
+	const y = (odd1 / odd2) * x;
 
-	function adjugate3x3(matrix) {
-		return [
-			[
-				matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1],
-				-(matrix[1][0] * matrix[2][2] - matrix[1][2] * matrix[2][0]),
-				matrix[1][0] * matrix[2][1] - matrix[1][1] * matrix[2][0]
-			],
-			[
-				-(matrix[0][1] * matrix[2][2] - matrix[0][2] * matrix[2][1]),
-				matrix[0][0] * matrix[2][2] - matrix[0][2] * matrix[2][0],
-				-(matrix[0][0] * matrix[2][1] - matrix[0][1] * matrix[2][0])
-			],
-			[
-				matrix[0][1] * matrix[1][2] - matrix[0][2] * matrix[1][1],
-				-(matrix[0][0] * matrix[1][2] - matrix[0][2] * matrix[1][0]),
-				matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0]
-			]
-		];
-	}
+	// Calcular z com base em y e as odds
+	const z = (odd2 / odd3) * y;
 
-	function multiplyMatrixVector(matrix, vector) {
-		return matrix.map(row => row.reduce((sum, value, index) => sum + value * vector[index], 0));
-	}
-
-	const detA = determinant3x3(A);
-	const adjA = adjugate3x3(A);
-	const invA = adjA.map(row => row.map(value => value / detA));
-	const X = multiplyMatrixVector(invA, B);
-
-	return { x: X[0], y: X[1], z: X[2] };
+	return { x: x, y: y, z: z };
 }
 
-function calcularReturnRate2(a, b) {
-	const A = [[1, 1], [a, -b]];
-	const B = [1, 0];
+function calcularReturnRate2(odd1, odd2) {
+	// Calcular x
+	const x = odd2 / (odd1 + odd2);
 
-	function determinant2x2(matrix) {
-		return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
-	}
+	// Calcular y
+	const y = odd1 / (odd1 + odd2);
 
-	function adjugate2x2(matrix) {
-		return [
-			[matrix[1][1], -matrix[0][1]],
-			[-matrix[1][0], matrix[0][0]]
-		];
-	}
-
-	function multiplyMatrixVector(matrix, vector) {
-		return matrix.map(row => row.reduce((sum, value, index) => sum + value * vector[index], 0));
-	}
-
-	const detA = determinant2x2(A);
-	const adjA = adjugate2x2(A);
-	const invA = adjA.map(row => row.map(value => value / detA));
-	const X = multiplyMatrixVector(invA, B);
-
-	return { x: X[0], y: X[1] };
+	return { x, y };
 }
 
 function getGradientOdds(value, minValue, maxValue) {
@@ -104,7 +56,7 @@ const maxSuperOdds = 95.0;
 
 // Função genérica para remover uma div, se necessário
 function removeDivIfExists(existingDiv) {
-	if (existingDiv?.classList.contains('return-rate')) {
+	if (existingDiv.classList.contains('extension-container') || existingDiv.classList.contains('return-rate')) {
 		existingDiv.remove();
 	}
 }
@@ -124,13 +76,13 @@ function processOdds(casino, oddsChildren, existingDiv) {
 			}
 			if (oddsChildren.length === 3) {
 				if (isNaN(a) || isNaN(b) || isNaN(c)) {
-					removeDivIfExists(existingDiv);
+					//	removeDivIfExists(existingDiv);
 					return null;
 				}
 				solution = calcularReturnRate3(a, b, c);
 			} else if (oddsChildren.length === 2) {
 				if (isNaN(a) || isNaN(b)) {
-					removeDivIfExists(existingDiv);
+					//	removeDivIfExists(existingDiv);
 					return null;
 				}
 				solution = calcularReturnRate2(a, b);
@@ -165,7 +117,9 @@ function processOdds(casino, oddsChildren, existingDiv) {
 			break;
 	}
 
-	return { a, solution };
+	let odds = { odd1: a, odd2: b, odd3: c }
+
+	return { odds, solution };
 }
 
 function createProgressBar(returnRate, existingDiv, height) {
@@ -205,27 +159,89 @@ function createProgressBar(returnRate, existingDiv, height) {
 	progressBarSteps.insertAdjacentElement('beforeend', progressBarStep)
 }
 
+function createBetanoEvents(input, odd1rr, odd2rr, odd3rr, existingDiv, testBool, solution) {
+	existingDiv.addEventListener('click', function () {
+		if (existingDiv.parentElement.children.length < 2) {
+			if (testBool == undefined) {
+				buttonClassName = 'betano-light';
+				inputColor = "#f6f8f9"
+			} else {
+				buttonClassName = 'betano-dark';
+				inputColor = "#2d3745"
+			}
+
+			input.type = 'number'; // Define o tipo do input como texto
+			input.placeholder = 'Valor Freebets'; // Define um placeholder
+			input.style.color = existingDiv.style.color
+			input.style.backgroundColor = inputColor
+			input.style.borderColor = existingDiv.style.color;
+			input.style.boxShadow = existingDiv.style.color;
+			existingDiv.parentElement.insertAdjacentElement('beforeend', input);
+
+			odd1rr = document.createElement('div');
+			odd1rr.className = buttonClassName
+			odd1rr.textContent = `${Math.round((solution.x).toFixed(2) * 10000) / 10000}€`
+			existingDiv.parentElement.insertAdjacentElement('beforeend', odd1rr);
+
+			odd2rr = document.createElement('div');
+			odd2rr.className = buttonClassName
+			odd2rr.textContent = `${Math.round((solution.y).toFixed(2) * 10000) / 10000}€`
+			existingDiv.parentElement.insertAdjacentElement('beforeend', odd2rr);
+
+			odd3rr = document.createElement('div');
+			odd3rr.className = buttonClassName
+			odd3rr.textContent = `${Math.round((solution.z).toFixed(2) * 10000) / 10000}€`
+			existingDiv.parentElement.insertAdjacentElement('beforeend', odd3rr);
+		}
+	});
+
+	input.addEventListener('input', () => {
+		value = input.value;
+		if (!(value.trim() === "")) {
+			odd1rr.textContent = `${Math.round((solution.x * value).toFixed(2) * 10000) / 10000}€`
+			odd2rr.textContent = `${Math.round((solution.y * value).toFixed(2) * 10000) / 10000}€`
+			odd3rr.textContent = `${Math.round((solution.z * value).toFixed(2) * 10000) / 10000}€`
+		}
+	})
+}
+
 // Atualiza ou cria uma div
-function updateOrCreateDiv(casino, itemView, participantsDiv, existingDiv, returnRate, uniqueId) {
+function updateOrCreateDiv(casino, itemView, participantsDiv, existingDiv, returnRate, uniqueId, solution) {
 	let newText, valueColor;
 	switch (casino) {
 		case "Betano":
-			if (!existingDiv || (!existingDiv.classList.contains('return-rate'))) {
+			let testBool = itemView.querySelector('a[data-qa="live-event"]');
+			if (!existingDiv || (!existingDiv.classList.contains('extension-container'))) {
+				extensionContainer = document.createElement('div');
+				extensionContainer.className = "extension-container"
+				extensionContainer.id = "container " + uniqueId;
+				participantsDiv.insertAdjacentElement('afterend', extensionContainer);
+
 				existingDiv = document.createElement('div');
-				let testBool = itemView.querySelector('a[data-qa="live-event"]');
 				if (testBool == undefined) existingDiv.className = 'return-rate betano-light';
 				else existingDiv.className = 'return-rate betano-dark';
 				existingDiv.id = uniqueId;
-				participantsDiv.insertAdjacentElement('afterend', existingDiv);
+				valueColor = returnRate < maxOdds
+					? getGradientOdds(returnRate, minOdds, maxOdds)
+					: getGradientSuperOdds(returnRate, maxOdds - 0.5, maxSuperOdds - 0.5);
+
+				existingDiv.textContent = `${returnRate}%`;
+				existingDiv.style.color = valueColor;
+				extensionContainer.insertAdjacentElement('afterbegin', existingDiv);
+
+				let input, odd1rr, odd2rr, odd3rr;
+				input = document.createElement('input');
+				createBetanoEvents(input, odd1rr, odd2rr, odd3rr, existingDiv, testBool, solution)
 			}
 
-			newText = `${returnRate}%`;
 			valueColor = returnRate < maxOdds
 				? getGradientOdds(returnRate, minOdds, maxOdds)
 				: getGradientSuperOdds(returnRate, maxOdds - 0.5, maxSuperOdds - 0.5);
 
-			if (existingDiv.textContent !== newText) existingDiv.textContent = newText;
-			if (existingDiv.style.color !== valueColor) existingDiv.style.color = valueColor;
+			if (!existingDiv.classList.contains("extension-container")) {
+				if (existingDiv.textContent !== newText) existingDiv.textContent = `${returnRate}%`;
+				if (existingDiv.style.color !== valueColor) existingDiv.style.color = valueColor;
+			}
 			break;
 		case "Betclic":
 			if (!existingDiv || (!existingDiv.classList.contains('return-rate'))) {
@@ -241,27 +257,7 @@ function updateOrCreateDiv(casino, itemView, participantsDiv, existingDiv, retur
 
 				createProgressBar(returnRate, existingDiv, 7)
 				createProgressBar(returnRate, existingDiv, 9)
-
-				/*
-				progressBar = document.createElement('div');
-				progressBar.className = 'barra'
-				progressBar.id = "progressBar" + uniqueId;
-				existingDiv.insertAdjacentElement('afterbegin', progressBar)
-
-				progressBarSteps = document.createElement('div');
-				progressBarSteps.className = 'barra_steps'
-				progressBarSteps.id = "progressBarSteps" + uniqueId;
-				progressBar.insertAdjacentElement('afterbegin', progressBarSteps)
-				*/
 			}
-
-			//newText = `${returnRate}%`;
-			//valueColor = returnRate < maxOdds
-			//	? getGradientOdds(returnRate, minOdds, maxOdds)
-			//	: getGradientSuperOdds(returnRate, maxOdds, maxSuperOdds);
-
-			//if (existingDiv.textContent !== newText) existingDiv.textContent = newText;
-			//if (existingDiv.style.color !== valueColor) existingDiv.style.color = valueColor;
 			break;
 		default:
 			break;
@@ -270,27 +266,28 @@ function updateOrCreateDiv(casino, itemView, participantsDiv, existingDiv, retur
 
 // Lida com odds e manipula a criação/atualização da div
 function handleOdds(casino, itemView, participantsDiv, oddsDiv, existingDiv) {
-	let returnRate, uniqueId;
+	let returnRate, uniqueId, solution;
 	if (casino == "Betano") {
 		const oddsChildren = oddsDiv.children;
 		const oddsData = processOdds(casino, oddsChildren, existingDiv);
 		if (!oddsData) return;
 
-		const { a, solution } = oddsData;
-		returnRate = Math.round((solution.x * a).toFixed(4) * 10000) / 100;
-		uniqueId = `custom-return-rate-${participantsDiv.textContent.trim().replace(/\s+/g, '-')}`;
+		const { odds, solution: extractedSolution } = oddsData;
+		solution = extractedSolution;
+		returnRate = Math.round((extractedSolution.x * odds.odd1).toFixed(4) * 10000) / 100;
+		uniqueId = `custom-return-rate-${participantsDiv.children[0].textContent.trim().replace(/\s+/g, '-')}`;
 	} else if (casino == "Betclic") {
 		const oddsChildren = oddsDiv.children;
 		const oddsData = processOdds(casino, oddsChildren, existingDiv);
 		if (!oddsData) return;
 
-		const { a, solution } = oddsData;
-		returnRate = Math.round((solution.x * a).toFixed(4) * 10000) / 100;
+		const { odds, solution: extractedSolution } = oddsData;
+		solution = extractedSolution;
+		returnRate = Math.round((extractedSolution.x * odds.odd1).toFixed(4) * 10000) / 100;
 		uniqueId = `custom-return-rate-${participantsDiv.children[1].children[0].textContent.trim().replace(/\s+/g, '-')}`;
 	}
 
-
-	updateOrCreateDiv(casino, itemView, participantsDiv, existingDiv, returnRate, uniqueId);
+	updateOrCreateDiv(casino, itemView, participantsDiv, existingDiv, returnRate, uniqueId, solution);
 }
 
 // Reseta a extensão para um item específico
@@ -311,8 +308,10 @@ function handleSelector(casino, itemView) {
 		oddsDiv = itemView.querySelector('.market').children[1];
 		if (oddsDiv != undefined) oddsDiv = oddsDiv.children[0]
 		if (!oddsDiv) return;
+		participantsDiv = participantsDiv.children[0]
 	}
 
+	participantsDiv = participantsDiv.parentElement
 	let existingDiv = participantsDiv.nextElementSibling;
 
 	handleOdds(casino, itemView, participantsDiv, oddsDiv, existingDiv);
@@ -342,6 +341,13 @@ function handleRecycleChanges() {
 			//Betclic
 			const normalBetclicWrappers = document.querySelectorAll('.groupEvents_content');
 			normalBetclicWrappers.forEach(normalWrapper => {
+				const normalViews = normalWrapper.querySelectorAll('.cardEvent_content');
+				normalViews.forEach(normalView => {
+					handleSelector("Betclic", normalView); // Atualiza as extensões de cada item
+				});
+			});
+			const normalBetclicWrappers2 = document.querySelectorAll('.verticalScroller_list');
+			normalBetclicWrappers2.forEach(normalWrapper => {
 				const normalViews = normalWrapper.querySelectorAll('.cardEvent_content');
 				normalViews.forEach(normalView => {
 					handleSelector("Betclic", normalView); // Atualiza as extensões de cada item
