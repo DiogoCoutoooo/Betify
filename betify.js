@@ -161,19 +161,15 @@ function createProgressBar(returnRate, existingDiv, height) {
 }
 
 function createBetanoEvents(casino, oddsDiv, returnRateElement, isDarkTheme, odd1rr, odd2rr, odd3rr) {
-	let input = document.createElement('input');
-
 	returnRateElement.addEventListener('click', function () {
-		let solution;
+		let input = document.createElement('input');
+		const oddsChildren = oddsDiv.children;
+		const oddsData = processOdds(casino, oddsChildren, returnRateElement);
+		if (!oddsData) return;
+		const { odds: extractedOdds, solution: extractedSolution } = oddsData;
+		let solution = extractedSolution;
+		let odds = extractedOdds;
 		if (returnRateElement.parentElement.children.length < 2) {
-			const oddsChildren = oddsDiv.children;
-			const oddsData = processOdds(casino, oddsChildren, returnRateElement);
-			if (!oddsData) return;
-
-			const { odds: extractedOdds, solution: extractedSolution } = oddsData;
-			solution = extractedSolution;
-			let odds = extractedOdds;
-
 			if (isDarkTheme == undefined) {
 				buttonClassName = 'betano-light';
 				inputColor = "#f6f8f9"
@@ -204,22 +200,23 @@ function createBetanoEvents(casino, oddsDiv, returnRateElement, isDarkTheme, odd
 			odd2rr.textContent = `${Math.round((solution.y).toFixed(2) * 10000) / 10000}€`
 			returnRateElement.parentElement.insertAdjacentElement('beforeend', odd2rr);
 
-			odd3rr = document.createElement('div');
-			odd3rr.className = buttonClassName
-			odd3rr.id = `${odds.odd3}`
-			odd3rr.textContent = `${Math.round((solution.z).toFixed(2) * 10000) / 10000}€`
-			returnRateElement.parentElement.insertAdjacentElement('beforeend', odd3rr);
+			if (solution.z != undefined) {
+				odd3rr = document.createElement('div');
+				odd3rr.className = buttonClassName
+				odd3rr.id = `${odds.odd3}`
+				odd3rr.textContent = `${Math.round((solution.z).toFixed(2) * 10000) / 10000}€`
+				returnRateElement.parentElement.insertAdjacentElement('beforeend', odd3rr);
+			}
 		}
+		input.addEventListener('input', () => {
+			value = input.value;
+			if (!(value.trim() === "")) {
+				odd1rr.textContent = `${Math.round((solution.x * value).toFixed(2) * 10000) / 10000}€`
+				odd2rr.textContent = `${Math.round((solution.y * value).toFixed(2) * 10000) / 10000}€`
+				if (solution.z != undefined) odd3rr.textContent = `${Math.round((solution.z * value).toFixed(2) * 10000) / 10000}€`
+			}
+		})
 	});
-
-	input.addEventListener('input', () => {
-		value = input.value;
-		if (!(value.trim() === "")) {
-			odd1rr.textContent = `${Math.round((solution.x * value).toFixed(2) * 10000) / 10000}€`
-			odd2rr.textContent = `${Math.round((solution.y * value).toFixed(2) * 10000) / 10000}€`
-			odd3rr.textContent = `${Math.round((solution.z * value).toFixed(2) * 10000) / 10000}€`
-		}
-	})
 }
 
 // Função que elimina o Freebet Divider
@@ -283,7 +280,7 @@ function updateOrCreateDiv(casino, view, participantsElement, oddsDiv, returnRat
 			}
 			break;
 		case "Betclic":
-			if (!returnRateElement || (!returnRateElement.classList.contains('return-rate'))) {
+			if (!returnRateElement.classList.contains('return-rate')) {
 				returnRateElement = document.createElement('div');
 				returnRateElement.className = 'return-rate btn is-odd is-large has-trends ng-star-inserted'
 				returnRateElement.id = uniqueId;
@@ -296,6 +293,16 @@ function updateOrCreateDiv(casino, view, participantsElement, oddsDiv, returnRat
 
 				createProgressBar(returnRate, returnRateElement, 7)
 				createProgressBar(returnRate, returnRateElement, 9)
+			} else if (returnRateElement.nextElementSibling.classList.contains('markets') && returnRateElement.nextElementSibling.id.includes("custom-return-rate")) {
+				returnRateElement.nextElementSibling.children[0].remove()
+				returnRateElement.nextElementSibling.children[0].remove()
+				returnRateElement.nextElementSibling.children[0].remove()
+				returnRateElement.nextElementSibling.nextElementSibling.remove()
+			} else if (returnRateElement.classList.contains('markets') && returnRateElement.id.includes("custom-return-rate")) {
+				returnRateElement.children[0].remove()
+				returnRateElement.children[0].remove()
+				returnRateElement.children[0].remove()
+				returnRateElement.nextElementSibling.remove()
 			}
 			break;
 		default:
@@ -427,11 +434,8 @@ function observerCreate() {
 
 // Função que inicia a extensão
 function initializeExtension() {
-	const waitLoad = setInterval(() => {
-		clearInterval(waitLoad); // Para o intervalo ao encontrar os elementos
-		handleRecycleChanges();    // Aplica a lógica inicialmente
-		observerCreate();  // Observa mudanças no DOM reciclável
-	}, 50);
+	handleRecycleChanges();    // Aplica a lógica inicialmente
+	observerCreate();  // Observa mudanças no DOM reciclável
 }
 
 // Inicia a extensão
