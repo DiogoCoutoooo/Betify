@@ -2,7 +2,7 @@
 	"description": "QoL improvments to betting websites",
 	"manifest_version": 3,
 	"name": "Betify",
-	"version": "3.2",
+	"version": "3.3",
 	"homepage_url": "https://github.com/DiogoCoutoooo/Betify",
 	"icons": {
 		"96": "betify-logo-96.svg"

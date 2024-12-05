@@ -18,7 +18,7 @@ function calcularReturnRate2(odd1, odd2) {
 	//  Calcular y
 	const y = odd1 / (odd1 + odd2);
 
-	return { x, y };
+	return { x: x, y: y };
 }
 
 function getGradientOdds(value, minValue, maxValue) {
@@ -99,18 +99,15 @@ function processOdds(casino, oddsChildren, returnRateElement) {
 			c = parseFloat(oddsChildren[2]?.children[1]?.textContent.trim().replace(',', '.'));
 			if (oddsChildren.length === 3) {
 				if (isNaN(a) || isNaN(b) || isNaN(c)) {
-					removeDivIfExists(returnRateElement);
 					return null;
 				}
 				solution = calcularReturnRate3(a, b, c);
 			} else if (oddsChildren.length === 2) {
 				if (isNaN(a) || isNaN(b)) {
-					removeDivIfExists(returnRateElement);
 					return null;
 				}
 				solution = calcularReturnRate2(a, b);
 			} else {
-				removeDivIfExists(returnRateElement);
 				return null;
 			}
 			break
@@ -140,7 +137,7 @@ function createProgressBar(returnRate, existingDiv, height) {
 	progressBarWrapper.className = 'progressBar_wrapper'
 	progressBar.insertAdjacentElement('beforeend', progressBarWrapper)
 
-	let fill = Math.max(0, (returnRate - 85) * 9)
+	let fill = Math.min(Math.max(0, (returnRate - (minOdds - 4)) * 9), 100)
 	let valueColor = returnRate < (maxOdds - 1)
 		? getGradientOdds(returnRate, minOdds, maxOdds - 1)
 		: getGradientSuperOdds(returnRate, maxOdds - 1.5, maxSuperOdds - 1.5);
@@ -231,6 +228,7 @@ function deleteBetanoEvents(existingDiv) {
 // TODO: tentar fazer com que a função seja mais pequena
 // TODO: ver se é possível fazer o botão usando o css já existente na Betano (como se fez na Betclic)
 function updateOrCreateDiv(casino, view, participantsElement, oddsDiv, returnRateElement, returnRate, uniqueId) {
+	if (oddsDiv.children.length == 3 && returnRate < 55) returnRate *= 2
 	const divText = `${returnRate}%` // Texto com o returnRate, para meter na div do mesmo
 	switch (casino) {
 		case "Betano":
@@ -241,7 +239,7 @@ function updateOrCreateDiv(casino, view, participantsElement, oddsDiv, returnRat
 				? getGradientOdds(returnRate, minOdds, maxOdds)
 				: getGradientSuperOdds(returnRate, maxOdds - 0.5, maxSuperOdds - 0.5);
 
-			// Verifica se o returnRateElement já foi criado e existe (extensionContainer)
+			// Verifica se o returnRateElement já foi criado e existe (extensionContainer), e dá update
 			if (!returnRateElement || (!returnRateElement.classList.contains('extension-container'))) {
 
 				// Criação do container
@@ -283,26 +281,55 @@ function updateOrCreateDiv(casino, view, participantsElement, oddsDiv, returnRat
 			if (!returnRateElement.classList.contains('return-rate')) {
 				returnRateElement = document.createElement('div');
 				returnRateElement.className = 'return-rate btn is-odd is-large has-trends ng-star-inserted'
-				returnRateElement.id = uniqueId;
 				participantsElement.insertAdjacentElement('afterend', returnRateElement);
 
-				textSpan = document.createElement('span');
+				let textSpan = document.createElement('span');
 				textSpan.className = 'label ng-star-inserted'
 				textSpan.textContent = divText
 				returnRateElement.insertAdjacentElement('beforeend', textSpan)
 
 				createProgressBar(returnRate, returnRateElement, 7)
 				createProgressBar(returnRate, returnRateElement, 9)
-			} else if (returnRateElement.nextElementSibling.classList.contains('markets') && returnRateElement.nextElementSibling.id.includes("custom-return-rate")) {
-				returnRateElement.nextElementSibling.children[0].remove()
-				returnRateElement.nextElementSibling.children[0].remove()
-				returnRateElement.nextElementSibling.children[0].remove()
-				returnRateElement.nextElementSibling.nextElementSibling.remove()
-			} else if (returnRateElement.classList.contains('markets') && returnRateElement.id.includes("custom-return-rate")) {
-				returnRateElement.children[0].remove()
-				returnRateElement.children[0].remove()
-				returnRateElement.children[0].remove()
-				returnRateElement.nextElementSibling.remove()
+			}
+			// CÓDIGO PODRE TENTAR FAZER MELHOR
+			if (returnRateElement.parentElement.children.length == 4) {
+				if (returnRateElement.nextElementSibling.nextElementSibling !== null) {
+					if (returnRateElement.nextElementSibling.querySelectorAll('.btn_trends').length > 0) {
+						let firstButtonTrend = returnRateElement.nextElementSibling.querySelector('.btn_trends');
+						firstButtonTrend.remove()
+						let secondButtonTrend = returnRateElement.nextElementSibling.querySelector('.btn_trends');
+						secondButtonTrend.remove()
+						let spanRemove = returnRateElement.nextElementSibling.querySelector('span');
+						spanRemove.remove()
+						returnRateElement.nextElementSibling.nextElementSibling.remove()
+					}
+				}
+			}
+			// Verifica se o returnRateElement já foi criado e existe, e dá update
+			if (returnRateElement.classList.contains('return-rate')) {
+				//alert(divText)
+				let textSpan = returnRateElement.querySelector('span');
+				if (textSpan.textContent !== divText) {
+					textSpan.textContent = divText
+				}
+				returnRateElement.id = uniqueId; // Coloca o uniqueId na returnRateDiv
+				let progressBars = returnRateElement.querySelectorAll('.progressBar_fill');
+				progressBars.forEach(bar => {
+					let fill = Math.min(Math.max(0, (returnRate - (minOdds - 4)) * 9), 100)
+					let valueColor = returnRate < (maxOdds - 1)
+						? getGradientOdds(returnRate, minOdds, maxOdds - 1)
+						: getGradientSuperOdds(returnRate, maxOdds - 1.5, maxSuperOdds - 1.5);
+
+					bar.style = `width: ${fill}%`
+					bar.style.background = valueColor
+				})
+				if (divText == undefined) {
+					returnRateElement.remove()
+				}
+				//updateProgress(returnRate, returnRateElement, 7)
+				//createProgressBar(returnRate, returnRateElement, 9)
+			}
+			if (returnRate == undefined) {
 			}
 			break;
 		default:
@@ -363,8 +390,10 @@ function handleSelector(casino, view) {
 
 			oddsDiv = view.querySelector('.market').children[1];
 			if (oddsDiv != undefined) oddsDiv = oddsDiv.children[0]
-			if (!oddsDiv) return;
-
+			if (!oddsDiv) {
+				removeDivIfExists(participantsDiv.nextElementSibling);
+				return;
+			}
 			// Aqui não criamos container (não é preciso)
 			let returnRateDiv = participantsDiv.nextElementSibling; // Variável que vai verificar se é mesmo uma returnRateDiv ou não
 
