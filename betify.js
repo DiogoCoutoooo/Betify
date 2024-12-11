@@ -63,7 +63,9 @@ function removeDivIfExists(returnRateElement) {
 
 //  Verifica os odds e calcula o retorno
 // TODO: melhorar função
-function processOdds(casino, oddsChildren, returnRateElement) {
+function processOdds(casino, oddsDiv, returnRateElement) {
+	let oddsChildren = oddsDiv?.children;
+	let odds
 	let a, b, c, solution;
 	switch (casino) {
 		case "Betano":
@@ -91,7 +93,7 @@ function processOdds(casino, oddsChildren, returnRateElement) {
 				removeDivIfExists(returnRateElement);
 				return null;
 			}
-
+			odds = { odd1: a, odd2: b, odd3: c }
 			break;
 		case "Betclic":
 			a = parseFloat(oddsChildren[0]?.children[1]?.textContent.trim().replace(',', '.'));
@@ -110,12 +112,68 @@ function processOdds(casino, oddsChildren, returnRateElement) {
 			} else {
 				return null;
 			}
+			odds = { odd1: a, odd2: b, odd3: c }
+			break
+		case "Bwin":
+			if (oddsDiv == undefined) {
+				return null;
+			}
+			if (oddsDiv.parentElement.classList.contains("grid-six-pack-wrapper")) {
+				// VER TUDO DENOVO CÓDIGO MEGA PODRE
+				a = parseFloat(oddsChildren[0]?.querySelector(".option-value")?.textContent.trim());
+				b = parseFloat(oddsChildren[1]?.querySelector(".option-value")?.textContent.trim());
+				if (oddsChildren.length == 3) {
+					a = parseFloat(oddsChildren[1]?.querySelector(".option-value")?.textContent.trim());
+					b = parseFloat(oddsChildren[2]?.querySelector(".option-value")?.textContent.trim());
+				}
+				if (oddsChildren.length == 1) {
+					solution = { x: 0, y: 0 };
+					odds = { odd1: a, odd2: b }
+					return null
+				}
+				solution = calcularReturnRate2(a, b);
+				odds = { odd1: a, odd2: b }
+				return { odds, solution };
+			} else {
+				// VER TUDO DENOVO CÓDIGO MEGA PODRE
+				a = parseFloat(oddsChildren[0]?.querySelector(".option-value")?.textContent.trim());
+				b = parseFloat(oddsChildren[1]?.querySelector(".option-value")?.textContent.trim());
+				c = parseFloat(oddsChildren[2]?.querySelector(".option-value")?.textContent.trim());
+				if (oddsChildren.length < 2) {
+					removeDivIfExists(returnRateElement);
+					return null
+				}
+				if (oddsChildren.length == 2) {
+					if (isNaN(a) || isNaN(b)) {
+						removeDivIfExists(returnRateElement);
+						return null
+					}
+					solution = calcularReturnRate2(a, b);
+					odds = { odd1: a, odd2: b, odd3: c }
+					return { odds, solution };
+				}
+				if (oddsDiv.querySelectorAll(".grid-option-selectable")?.length == 3) {
+					if (isNaN(a) || isNaN(b) || isNaN(c)) {
+						removeDivIfExists(returnRateElement);
+						return null
+					}
+					solution = calcularReturnRate3(a, b, c);
+					odds = { odd1: a, odd2: b, odd3: c }
+					return { odds, solution };
+				} else if (oddsDiv.querySelectorAll(".grid-option-selectable")?.length != oddsDiv.querySelectorAll(".option-group-attribute")?.length) {
+					if (isNaN(b) || isNaN(c)) {
+						removeDivIfExists(returnRateElement);
+						return null
+					}
+					solution = calcularReturnRate2(b, c);
+					odds = { odd1: b, odd2: c, odd3: a }
+					return { odds, solution };
+				}
+			}
 			break
 		default:
 			break;
 	}
-
-	let odds = { odd1: a, odd2: b, odd3: c }
 
 	return { odds, solution };
 }
@@ -160,8 +218,7 @@ function createProgressBar(returnRate, existingDiv, height) {
 function createBetanoEvents(casino, oddsDiv, returnRateElement, isDarkTheme, odd1rr, odd2rr, odd3rr) {
 	returnRateElement.addEventListener('click', function () {
 		let input = document.createElement('input');
-		const oddsChildren = oddsDiv.children;
-		const oddsData = processOdds(casino, oddsChildren, returnRateElement);
+		const oddsData = processOdds(casino, oddsDiv, returnRateElement);
 		if (!oddsData) return;
 		const { odds: extractedOdds, solution: extractedSolution } = oddsData;
 		let solution = extractedSolution;
@@ -176,8 +233,8 @@ function createBetanoEvents(casino, oddsDiv, returnRateElement, isDarkTheme, odd
 			}
 
 			input.className = "input"
-			input.type = 'number'; //  Define o tipo do input como texto
-			input.placeholder = 'Valor Freebets'; //  Define um placeholder
+			input.type = 'number'; // Define o tipo do input como texto
+			input.placeholder = 'Valor Freebets'; // Define um placeholder
 			input.value = "";
 			input.style.color = returnRateElement.style.color
 			input.style.backgroundColor = inputColor
@@ -230,10 +287,10 @@ function deleteBetanoEvents(existingDiv) {
 function updateOrCreateDiv(casino, view, participantsElement, oddsDiv, returnRateElement, returnRate, uniqueId) {
 	if (oddsDiv.children.length == 3 && returnRate < 55) returnRate *= 2
 	const divText = `${returnRate}%` // Texto com o returnRate, para meter na div do mesmo
+	let valueColor, odd1rr, odd2rr, odd3rr;
 	switch (casino) {
 		case "Betano":
 			// Cor da divText, inputElement, odd1rrElement, odd2rrElement, odd3rrElement
-			let valueColor, input, odd1rr, odd2rr, odd3rr;
 			// Obtenção da cor através de um gradiente
 			valueColor = returnRate < maxOdds
 				? getGradientOdds(returnRate, minOdds, maxOdds)
@@ -326,12 +383,138 @@ function updateOrCreateDiv(casino, view, participantsElement, oddsDiv, returnRat
 				if (divText == undefined) {
 					returnRateElement.remove()
 				}
-				//updateProgress(returnRate, returnRateElement, 7)
-				//createProgressBar(returnRate, returnRateElement, 9)
 			}
 			if (returnRate == undefined) {
 			}
 			break;
+		case "Bwin":
+			let newOddsDiv = oddsDiv.parentElement.querySelector('.grid-six-pack-wrapper')
+			if (newOddsDiv) {
+				if (!returnRateElement.classList.contains('extension-container-long')) {
+					let extensionContainer = document.createElement('div');
+					extensionContainer.className = 'extension-container-long'
+					extensionContainer.id = uniqueId; // Coloca o uniqueId na returnRateDiv
+					participantsElement.nextElementSibling.insertAdjacentElement('afterend', extensionContainer);
+
+					let oddsData1 = processOdds(casino, newOddsDiv?.children[0], returnRateElement.children[0])
+
+					if (oddsData1 != null) {
+						let returnRateElement1 = document.createElement('div');
+						returnRateElement1.className = 'return-rate bwin-button one'
+						returnRateElement1.id = uniqueId + " one"; // Coloca o uniqueId na returnRateDiv
+						extensionContainer.insertAdjacentElement('beforeend', returnRateElement1);
+					} else {
+						let returnRateElement1 = document.createElement('div');
+						returnRateElement1.className = 'return-rate bwin-button one'
+						returnRateElement1.id = uniqueId + " one"; // Coloca o uniqueId na returnRateDiv
+						extensionContainer.insertAdjacentElement('beforeend', returnRateElement1);
+					}
+
+					let oddsData2 = processOdds(casino, newOddsDiv?.children[1], returnRateElement.children[1])
+
+					if (oddsData2 != null) {
+						let returnRateElement2 = document.createElement('div');
+						returnRateElement2.className = 'return-rate bwin-button two'
+						returnRateElement2.id = uniqueId + " two"; // Coloca o uniqueId na returnRateDiv
+						extensionContainer.insertAdjacentElement('beforeend', returnRateElement2);
+					} else {
+						let returnRateElement2 = document.createElement('div');
+						returnRateElement2.className = 'return-rate bwin-button two'
+						returnRateElement2.id = uniqueId + " two"; // Coloca o uniqueId na returnRateDiv
+						extensionContainer.insertAdjacentElement('beforeend', returnRateElement2);
+					}
+
+					let oddsData3 = processOdds(casino, newOddsDiv?.children[2], returnRateElement.children[2])
+
+					if (oddsData3 != null) {
+						let returnRateElement3 = document.createElement('div');
+						returnRateElement3.className = 'return-rate bwin-button three'
+						returnRateElement3.id = uniqueId + " three"; // Coloca o uniqueId na returnRateDiv
+						extensionContainer.insertAdjacentElement('beforeend', returnRateElement3);
+					} else {
+						let returnRateElement3 = document.createElement('div');
+						returnRateElement3.className = 'return-rate bwin-button three'
+						returnRateElement3.id = uniqueId + " three"; // Coloca o uniqueId na returnRateDiv
+						extensionContainer.insertAdjacentElement('beforeend', returnRateElement3);
+					}
+				}
+				if (returnRateElement.classList.contains('extension-container-long')) {
+					if (returnRateElement.children.length == 3) {
+						let oddsData1 = processOdds(casino, newOddsDiv?.children[0], returnRateElement)
+						let oddsData2 = processOdds(casino, newOddsDiv?.children[1], returnRateElement)
+						let oddsData3 = processOdds(casino, newOddsDiv?.children[2], returnRateElement)
+
+						if (oddsData1 != null) {
+							let { odds: extractedOdds1, solution: extractedSolution1 } = oddsData1
+							let returnRate1 = Math.round((extractedSolution1?.x * extractedOdds1?.odd1).toFixed(4) * 10000) / 100
+							let valueColor1 = returnRate1 < (maxOdds - 1)
+								? getGradientOdds(returnRate1, minOdds, maxOdds - 1)
+								: getGradientSuperOdds(returnRate1, maxOdds - 1.5, maxSuperOdds - 1.5);
+							let returnRateElement1 = returnRateElement.children[0];
+							if (returnRateElement1.textContent != `${returnRate1}%`) returnRateElement1.textContent = `${returnRate1}%`; // Mete o returnRate como texto da div
+							if (returnRateElement1.style.color != valueColor1) returnRateElement1.style.color = valueColor1; // Muda a cor da div para o gradiente
+						} else {
+							let returnRateElement1 = returnRateElement.children[0];
+							if (returnRateElement1.textContent != `0%`) returnRateElement1.textContent = `0%`; // Mete o returnRate como texto da div
+							if (returnRateElement1.style.color != `rgb(255, 255, 255)`) returnRateElement1.style.color = `rgb(255, 255, 255)`; // Muda a cor da div para o gradiente
+						}
+						if (oddsData2 != null) {
+							let { odds: extractedOdds2, solution: extractedSolution2 } = oddsData2
+							let returnRate2 = Math.round((extractedSolution2?.x * extractedOdds2?.odd1).toFixed(4) * 10000) / 100
+							let valueColor2 = returnRate2 < (maxOdds - 1)
+								? getGradientOdds(returnRate2, minOdds, maxOdds - 1)
+								: getGradientSuperOdds(returnRate2, maxOdds - 1.5, maxSuperOdds - 1.5);
+							let returnRateElement2 = returnRateElement.children[1];
+							if (returnRateElement2.textContent != `${returnRate2}%`) returnRateElement2.textContent = `${returnRate2}%`; // Mete o returnRate como texto da div
+							if (returnRateElement2.style.color != valueColor2) returnRateElement2.style.color = valueColor2; // Muda a cor da div para o gradiente
+						} else {
+							let returnRateElement2 = returnRateElement.children[1];
+							if (returnRateElement2.textContent != `0%`) returnRateElement2.textContent = `0%`; // Mete o returnRate como texto da div
+							if (returnRateElement2.style.color != `rgb(255, 255, 255)`) returnRateElement2.style.color = `rgb(255, 255, 255)`; // Muda a cor da div para o gradiente
+						}
+						if (oddsData3 != null) {
+							let { odds: extractedOdds3, solution: extractedSolution3 } = oddsData3
+							let returnRate3 = Math.round((extractedSolution3?.x * extractedOdds3?.odd1).toFixed(4) * 10000) / 100
+							let valueColor3 = returnRate3 < (maxOdds - 1)
+								? getGradientOdds(returnRate3, minOdds, maxOdds - 1)
+								: getGradientSuperOdds(returnRate3, maxOdds - 1.5, maxSuperOdds - 1.5);
+							let returnRateElement3 = returnRateElement.children[2];
+							if (returnRateElement3.textContent != `${returnRate3}%`) returnRateElement3.textContent = `${returnRate3}%`; // Mete o returnRate como texto da div
+							if (returnRateElement3.style.color != valueColor3) returnRateElement3.style.color = valueColor3; // Muda a cor da div para o gradiente
+						} else {
+							let returnRateElement3 = returnRateElement.children[2];
+							if (returnRateElement3.textContent != `0%`) returnRateElement3.textContent = `0%`; // Mete o returnRate como texto da div
+							if (returnRateElement3.style.color != `rgb(255, 255, 255)`) returnRateElement3.style.color = `rgb(255, 255, 255)`; // Muda a cor da div para o gradiente
+						}
+					}
+				}
+			} else if (oddsDiv.children.length > 1) {
+				// Obtenção da cor através de um gradiente
+				valueColor = returnRate < maxOdds
+					? getGradientOdds(returnRate, minOdds, maxOdds)
+					: getGradientSuperOdds(returnRate, maxOdds - 0.5, maxSuperOdds - 0.5);
+
+				if (!returnRateElement.classList.contains('return-rate')) {
+					returnRateElement = document.createElement('div');
+					returnRateElement.className = 'return-rate bwin-button'
+					returnRateElement.id = uniqueId; // Coloca o uniqueId na returnRateDiv
+					returnRateElement.textContent = divText; // Mete o returnRate como texto da div
+					returnRateElement.style.color = valueColor; // Muda a cor da div para o gradiente
+					participantsElement.nextElementSibling.insertAdjacentElement('afterend', returnRateElement);
+				}
+				// Verifica se o returnRateElement já foi criado e existe, e dá update
+				if (returnRateElement.classList.contains('return-rate')) {
+					//alert(divText)
+					if (returnRateElement.textContent !== divText) {
+						returnRateElement.textContent = divText
+					}
+					if (returnRateElement.style.color !== valueColor) {
+						returnRateElement.style.color = valueColor
+					}
+					returnRateElement.id = uniqueId; // Coloca o uniqueId na returnRateDiv
+				}
+			}
+			break
 		default:
 			break;
 	}
@@ -340,23 +523,50 @@ function updateOrCreateDiv(casino, view, participantsElement, oddsDiv, returnRat
 // Lida com odds e manipula a criação/atualização da div
 // Chama a função updateOrCreateDiv, adicionando aos argumentos o returnRate e o uniqueId
 function handleOdds(casino, view, participantsElement, oddsDiv, returnRateElement) {
-	const oddsChildren = oddsDiv.children; // As divs do oddsDiv, ou seja, cada div com uma odd
-	const oddsData = processOdds(casino, oddsChildren, returnRateElement); // Função que dada uma oddsDiv, a processa e devolve o valor da odd dentro dela
-	if (!oddsData) return;
-	const { odds: extractedOdds, solution: extractedSolution } = oddsData; // extractedOdds: as odds do jogo; extractedSolution: a divisão das freebets do jogo
-	const returnRate = Math.round((extractedSolution.x * extractedOdds.odd1).toFixed(4) * 10000) / 100; // Return rate do jogo
-
+	let oddsChildren, oddsData, returnRate
 	switch (casino) {
 		case "Betano":
+			oddsChildren = oddsDiv.children; // As divs do oddsDiv, ou seja, cada div com uma odd
+			oddsData = processOdds(casino, oddsDiv, returnRateElement); // Função que dada uma oddsDiv, a processa e devolve o valor da odd dentro dela
+			if (!oddsData) return;
+			const { odds: extractedOdds1, solution: extractedSolution1 } = oddsData; // extractedOdds: as odds do jogo; extractedSolution: a divisão das freebets do jogo
+			returnRate = Math.round((extractedSolution1.x * extractedOdds1.odd1).toFixed(4) * 10000) / 100; // Return rate do jogo
 			// Um uniqueId, que identifica unicamente cada jogo (usado mais tarde para ver alterações nas odds)
 			// custom-return-rate-${nome das equipas}-${odd1}-${odd2}-${odd3}
 			uniqueId = `custom-return-rate-${participantsElement.children[0].textContent}-${oddsChildren[0].textContent}-${oddsChildren[1].textContent}-${oddsChildren[2]?.textContent}`;
 			break;
 		case "Betclic":
+			oddsChildren = oddsDiv.children; // As divs do oddsDiv, ou seja, cada div com uma odd
+			oddsData = processOdds(casino, oddsDiv, returnRateElement); // Função que dada uma oddsDiv, a processa e devolve o valor da odd dentro dela
+			if (!oddsData) return;
+			const { odds: extractedOdds2, solution: extractedSolution2 } = oddsData; // extractedOdds: as odds do jogo; extractedSolution: a divisão das freebets do jogo
+			returnRate = Math.round((extractedSolution2.x * extractedOdds2.odd1).toFixed(4) * 10000) / 100; // Return rate do jogo
 			// Um uniqueId, que identifica unicamente cada jogo (não vê alterações nas odds)
 			// custom-return-rate-${nome das equipas}
 			uniqueId = `custom-return-rate-${participantsElement.children[1].children[0].textContent}`;
 			break;
+		case "Bwin":
+			oddsChildren = oddsDiv.children; // As divs do oddsDiv, ou seja, cada div com uma odd
+			oddsData = processOdds(casino, oddsDiv, returnRateElement); // Função que dada uma oddsDiv, a processa e devolve o valor da odd dentro dela
+			let newOddsDiv = oddsDiv.parentElement.querySelector('.grid-six-pack-wrapper')
+			if (newOddsDiv) {
+				if (!oddsData) returnRate = 0;
+				else {
+					const { odds: extractedOdds2, solution: extractedSolution2 } = oddsData; // extractedOdds: as odds do jogo; extractedSolution: a divisão das freebets do jogo
+					returnRate = Math.round((extractedSolution2.x * extractedOdds2.odd1).toFixed(4) * 10000) / 100; // Return rate do jogo
+				}
+			}
+			else {
+				if (!oddsData) return;
+				else {
+					const { odds: extractedOdds2, solution: extractedSolution2 } = oddsData; // extractedOdds: as odds do jogo; extractedSolution: a divisão das freebets do jogo
+					returnRate = Math.round((extractedSolution2.x * extractedOdds2.odd1).toFixed(4) * 10000) / 100; // Return rate do jogo
+				}
+			}
+			// Um uniqueId, que identifica unicamente cada jogo (não vê alterações nas odds)
+			// custom-return-rate-${nome das equipas}
+			uniqueId = `custom-return-rate-${participantsElement.children[0].children[0].textContent}`;
+			break
 		default:
 			break;
 	}
@@ -390,14 +600,27 @@ function handleSelector(casino, view) {
 
 			oddsDiv = view.querySelector('.market').children[1];
 			if (oddsDiv != undefined) oddsDiv = oddsDiv.children[0]
+			// Caso a div das odds não tenha odds (ex: "Aposta já")
 			if (!oddsDiv) {
 				removeDivIfExists(participantsDiv.nextElementSibling);
 				return;
 			}
 			// Aqui não criamos container (não é preciso)
-			let returnRateDiv = participantsDiv.nextElementSibling; // Variável que vai verificar se é mesmo uma returnRateDiv ou não
+			let betclicReturnRateDiv = participantsDiv.nextElementSibling; // Variável que vai verificar se é mesmo uma returnRateDiv ou não
 
-			handleOdds(casino, view, participantsDiv, oddsDiv, returnRateDiv);
+			handleOdds(casino, view, participantsDiv, oddsDiv, betclicReturnRateDiv);
+			break
+		case "Bwin":
+			participantsDiv = view.querySelector('.grid-info-wrapper');
+			if (!participantsDiv) return;
+
+			oddsDiv = view.querySelector('.grid-group-container').children[0];
+			if (!oddsDiv) return;
+
+			// Aqui não criamos container (não é preciso)
+			let bwinReturnRateDiv = participantsDiv.nextElementSibling.nextElementSibling; // Variável que vai verificar se é mesmo uma returnRateDiv ou não
+
+			handleOdds(casino, view, participantsDiv, oddsDiv, bwinReturnRateDiv);
 			break
 		default:
 			break;
@@ -412,19 +635,19 @@ function handleRecycleChanges() {
 		case "www.betano.pt":
 			// Betano
 			// Apostas no recycle-scroller do vue
-			const itemBetanoWrappers = document.querySelectorAll('.vue-recycle-scroller__item-wrapper');
-			itemBetanoWrappers.forEach(itemWrapper => {
-				const itemViews = itemWrapper.querySelectorAll('.vue-recycle-scroller__item-view');
-				itemViews.forEach(itemView => {
-					handleSelector("Betano", itemView);
+			const vueBetanoWrappers = document.querySelectorAll('.vue-recycle-scroller__item-wrapper');
+			vueBetanoWrappers.forEach(wrapper => {
+				const views = wrapper.querySelectorAll('.vue-recycle-scroller__item-view');
+				views.forEach(view => {
+					handleSelector("Betano", view);
 				});
 			});
 			// Apostas ao vivo/pré-jogo
 			const normalBetanoWrappers = document.querySelectorAll('.events-list__wrapper');
-			normalBetanoWrappers.forEach(normalWrapper => {
-				const normalViews = normalWrapper.querySelectorAll('div[data-evtid]');
-				normalViews.forEach(normalView => {
-					handleSelector("Betano", normalView);
+			normalBetanoWrappers.forEach(wrapper => {
+				const views = wrapper.querySelectorAll('div[data-evtid]');
+				views.forEach(view => {
+					handleSelector("Betano", view);
 				});
 			});
 			break;
@@ -432,18 +655,28 @@ function handleRecycleChanges() {
 			// Betclic
 			// Apostas ao vivo
 			const normalBetclicWrappers = document.querySelectorAll('.groupEvents_content');
-			normalBetclicWrappers.forEach(normalWrapper => {
-				const normalViews = normalWrapper.querySelectorAll('.cardEvent_content');
-				normalViews.forEach(normalView => {
-					handleSelector("Betclic", normalView);
+			normalBetclicWrappers.forEach(wrapper => {
+				const views = wrapper.querySelectorAll('.cardEvent_content');
+				views.forEach(view => {
+					handleSelector("Betclic", view);
 				});
 			});
 			// Apostas pré-jogo
 			const normalBetclicWrappers2 = document.querySelectorAll('.verticalScroller_list');
-			normalBetclicWrappers2.forEach(normalWrapper => {
-				const normalViews = normalWrapper.querySelectorAll('.cardEvent_content');
-				normalViews.forEach(normalView => {
-					handleSelector("Betclic", normalView);
+			normalBetclicWrappers2.forEach(wrapper => {
+				const views = wrapper.querySelectorAll('.cardEvent_content');
+				views.forEach(view => {
+					handleSelector("Betclic", view);
+				});
+			});
+		case "sports.bwin.pt":
+			// Bwin
+			// Apostas pré-jogo
+			const normalBwinWrappers = document.querySelectorAll('.event-group');
+			normalBwinWrappers.forEach(wrapper => {
+				const views = wrapper.querySelectorAll('.grid-event-wrapper');
+				views.forEach(view => {
+					handleSelector("Bwin", view);
 				});
 			});
 		default:
@@ -463,8 +696,9 @@ function observerCreate() {
 
 // Função que inicia a extensão
 function initializeExtension() {
-	handleRecycleChanges();    // Aplica a lógica inicialmente
-	observerCreate();  // Observa mudanças no DOM reciclável
+	// Aplica a lógica inicialmente
+	handleRecycleChanges()
+	observerCreate() // Observa mudanças no DOM reciclável
 }
 
 // Inicia a extensão
