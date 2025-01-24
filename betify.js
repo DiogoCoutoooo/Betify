@@ -598,7 +598,7 @@ function handleSelector(casino, view) {
 			participantsDiv = view.querySelector('.event');
 			if (!participantsDiv) return;
 
-			oddsDiv = view.querySelector('.market').children[1];
+			oddsDiv = view.querySelector('.market').children[0];
 			if (oddsDiv != undefined) oddsDiv = oddsDiv.children[0]
 			// Caso a div das odds não tenha odds (ex: "Aposta já")
 			if (!oddsDiv) {
