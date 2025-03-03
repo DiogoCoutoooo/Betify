@@ -2,7 +2,7 @@
 	"description": "QoL improvments to betting websites",
 	"manifest_version": 3,
 	"name": "Betify",
-	"version": "4.1",
+	"version": "5.0",
 	"homepage_url": "https://github.com/DiogoCoutoooo/Betify",
 	"icons": {
 		"96": "betify-logo-96.svg"
@@ -12,7 +12,8 @@
 			"matches": [
 				"*://*.betano.pt/*",
 				"*://*.betclic.pt/*",
-				"*://*.bwin.pt/*"
+				"*://*.bwin.pt/*",
+				"*://*.estorilsolcasinos.pt/*"
 			],
 			"css": [
 				"style.css"
