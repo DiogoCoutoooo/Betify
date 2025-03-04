@@ -6,9 +6,8 @@
 	display: flex;
 }
 
-input {
+.input {
 	font-weight: bold;
-	margin-left: 6px;
 	border: 1px solid #ccc;
 	/* Ajuste para combinar com a borda dos botões */
 	border-radius: 10px;
@@ -23,9 +22,11 @@ input {
 	/* Cor do texto, baseada no verde do botão */
 	transition: all 0.3s ease-in-out;
 	/* Animações suaves em interações */
+	width: 140px;
+	margin-left: 6px;
 }
 
-input:focus {
+.input:focus {
 	outline: none;
 	/* Remove o contorno azul padrão */
 	border-color: #317300;
@@ -70,6 +71,7 @@ input:focus {
 	transition: all 0.2s ease;
 	font-weight: bold;
 	color: #fff;
+	margin-right: 5px;
 }
 
 /* Efeito de hover */
