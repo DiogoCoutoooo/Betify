@@ -2,7 +2,7 @@
 	"description": "QoL improvments to betting websites",
 	"manifest_version": 3,
 	"name": "Betify",
-	"version": "5.2",
+	"version": "5.3",
 	"homepage_url": "https://github.com/DiogoCoutoooo/Betify",
 	"icons": {
 		"96": "betify-logo-96.svg"
@@ -22,7 +22,7 @@
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "betify@test.com",
-			"update_url": "https://diogocoutoooo.github.io/betify.xpi"
+			"update_url": "https://diogocoutoooo.github.io/updates.json"
 		}
 	}
 }
