@@ -15,17 +15,14 @@
 				"*://*.bwin.pt/*",
 				"*://*.estorilsolcasinos.pt/*"
 			],
-			"css": [
-				"style.css"
-			],
-			"js": [
-				"betify.js"
-			]
+			"css": ["style.css"],
+			"js": ["betify.js"]
 		}
 	],
 	"browser_specific_settings": {
 		"gecko": {
-			"id": "betify@test.com"
+			"id": "betify@test.com",
+			"update_url": "https://example.com/updates.json"
 		}
 	}
 }
