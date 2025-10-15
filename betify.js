@@ -736,7 +736,7 @@ function handleRecycleChanges() {
 					handleSelector("Betclic", view);
 				});
 			});
-		case "sports.bwin.pt":
+		case "www.bwin.pt":
 			// Bwin
 			// Apostas pré-jogo
 			const normalBwinWrappers = document.querySelectorAll('.event-group');
@@ -747,7 +747,7 @@ function handleRecycleChanges() {
 				});
 			});
 		case "www.estorilsolcasinos.pt":
-			// Bwin
+			// ESC
 			// Apostas pré-jogo
 			const normalESCWrappers = document.querySelectorAll('.cNsbVj');
 			normalESCWrappers.forEach(wrapper => {
